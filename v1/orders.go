@@ -251,3 +251,25 @@ func (s *OrderService) Status(orderID int64) (Order, error) {
 
 	return *order, nil
 }
+
+// Active status retrieves from the API.
+func (s *OrderService) ActiveStatus() ([]Order, error) {
+
+	payload := map[string]interface{}{
+		"order_id": orderID,
+	}
+
+	req, err := s.client.newAuthenticatedRequest("POST", "orders", payload)
+
+	if err != nil {
+		return []Order{}, err
+	}
+
+	orders := []Order{}
+	_, err = s.client.do(req, &orders)
+	if err != nil {
+		return orders, err
+	}
+
+	return orders, nil
+}
