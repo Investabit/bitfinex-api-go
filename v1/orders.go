@@ -255,9 +255,7 @@ func (s *OrderService) Status(orderID int64) (Order, error) {
 // Active status retrieves from the API.
 func (s *OrderService) ActiveStatus() ([]Order, error) {
 
-	payload := map[string]interface{}{
-		"order_id": orderID,
-	}
+	payload := make(map[string]interface{})
 
 	req, err := s.client.newAuthenticatedRequest("POST", "orders", payload)
 
