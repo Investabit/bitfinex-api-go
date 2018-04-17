@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bitfinexcom/bitfinex-api-go/v2"
 	"path"
+	"strconv"
 )
 
 // OrderService manages data flow for the Order API endpoint
@@ -68,6 +69,31 @@ func (s *OrderService) History(symbol string) (*bitfinex.OrderSnapshot, error) {
 	}
 
 	os, err := bitfinex.NewOrderSnapshotFromRaw(raw)
+	if err != nil {
+		return nil, err
+	}
+
+	return os, nil
+}
+
+// All returns all trades for a given order for the authenticated account.
+func (s *OrderService) OrderTrades(symbol string, orderID int64) (*bitfinex.OrderTradeSnapshot, error) {
+	if symbol == "" {
+		return nil, fmt.Errorf("symbol cannot be empty")
+	}
+
+	id := strconv.FormatInt(orderID, 10)
+
+	req, err := s.requestFactory.NewAuthenticatedRequest(path.Join("order", symbol+id, "trades"))
+	if err != nil {
+		return nil, err
+	}
+	raw, err := s.Request(req)
+	if err != nil {
+		return nil, err
+	}
+
+	os, err := bitfinex.NewOrderTradeSnapshotFromRaw(raw)
 	if err != nil {
 		return nil, err
 	}

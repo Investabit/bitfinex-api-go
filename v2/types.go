@@ -386,6 +386,70 @@ func NewPositionSnapshotFromRaw(raw []interface{}) (s *PositionSnapshot, err err
 	return
 }
 
+type OrderTrade struct {
+	TID         int64
+	Pair        string
+	MTSCreate   int64 // timestamp
+	OrderID     int64
+	ExecAmount  float64
+	ExecPrice   float64
+	OrderType   string
+	OrderPrice  float64
+	Maker       int
+	Fee         float64
+	FeeCurrency string
+}
+
+type OrderTradeSnapshot struct {
+	Snapshot []*OrderTrade
+}
+
+func NewOrderTradeFromRaw(raw []interface{}) (o *OrderTrade, err error) {
+	if len(raw) == 11 {
+		o = &OrderTrade{
+			TID:         int64(f64ValOrZero(raw[0])),
+			Pair:        sValOrEmpty(raw[1]),
+			MTSCreate:   int64(f64ValOrZero(raw[2])),
+			OrderID:     int64(f64ValOrZero(raw[3])),
+			ExecAmount:  f64ValOrZero(raw[4]),
+			ExecPrice:   f64ValOrZero(raw[5]),
+			OrderType:   sValOrEmpty(raw[6]),
+			OrderPrice:  f64ValOrZero(raw[7]),
+			Maker:       int(f64ValOrZero(raw[8])),
+			Fee:         f64ValOrZero(raw[9]),
+			FeeCurrency: sValOrEmpty(raw[10]),
+		}
+	} else {
+		err = fmt.Errorf("not a order trade snapshot")
+	}
+	return
+}
+
+func NewOrderTradeSnapshotFromRaw(raw []interface{}) (s *OrderTradeSnapshot, err error) {
+	if len(raw) == 0 {
+		return
+	}
+
+	ots := make([]*OrderTrade, 0)
+	switch raw[0].(type) {
+	case []interface{}:
+		for _, v := range raw {
+			if l, ok := v.([]interface{}); ok {
+				o, err := NewOrderTradeFromRaw(l)
+				if err != nil {
+					return s, err
+				}
+				ots = append(ots, o)
+			}
+		}
+	default:
+		return s, fmt.Errorf("not an order snapshot")
+	}
+	s = &OrderTradeSnapshot{Snapshot: ots}
+
+	return
+}
+
 // Trade represents a trade on the public data feed.
 type Trade struct {
 	Pair   string
