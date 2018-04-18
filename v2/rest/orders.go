@@ -84,7 +84,7 @@ func (s *OrderService) OrderTrades(symbol string, orderID int64) (*bitfinex.Orde
 
 	id := strconv.FormatInt(orderID, 10)
 
-	req, err := s.requestFactory.NewAuthenticatedRequest(path.Join("order", symbol+id, "trades"))
+	req, err := s.requestFactory.NewAuthenticatedRequest(path.Join("order", symbol+":"+id, "trades"))
 	if err != nil {
 		return nil, err
 	}
