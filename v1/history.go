@@ -46,20 +46,27 @@ func (s *HistoryService) Balance(currency, wallet string, since, until time.Time
 }
 
 type Movement struct {
-	ID          int64 `json:",int"`
-	Currency    string
-	Method      string
-	Type        string
-	Amount      string
-	Description string
-	Status      string
-	Timestamp   string
+	ID               int64  `json:",int"`
+	TxID             string `json:"txid"`
+	Currency         string
+	Method           string
+	Type             string
+	Amount           float64 `json:"amount,string"`
+	Description      string
+	Address          string `json:"address"`
+	Status           string
+	Timestamp        string
+	TimestampCreated string  `json:"timestamp_created"`
+	Fee              float64 `json:"fee,string"`
 }
 
 func (s *HistoryService) Movements(currency, method string, since, until time.Time, limit int) ([]Movement, error) {
 
-	payload := map[string]interface{}{"currency": currency, "method": method}
+	payload := map[string]interface{}{"currency": currency}
 
+	if method != "" {
+		payload["method"] = method
+	}
 	if !since.IsZero() {
 		payload["since"] = since.Unix()
 	}
