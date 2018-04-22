@@ -15,11 +15,7 @@ type OrderService struct {
 
 // All returns all orders for the authenticated account.
 func (s *OrderService) All(symbol string) (*bitfinex.OrderSnapshot, error) {
-	req, err := s.requestFactory.NewAuthenticatedRequest(path.Join("orders", symbol))
-	if err != nil {
-		return nil, err
-	}
-	raw, err := s.Request(req)
+	raw, err := s.requestFactory.MakeNewAuthenticatedRequest(path.Join("orders", symbol), s)
 	if err != nil {
 		return nil, err
 	}
@@ -59,11 +55,7 @@ func (s *OrderService) History(symbol string) (*bitfinex.OrderSnapshot, error) {
 	if symbol == "" {
 		return nil, fmt.Errorf("symbol cannot be empty")
 	}
-	req, err := s.requestFactory.NewAuthenticatedRequest(path.Join("orders", symbol, "hist"))
-	if err != nil {
-		return nil, err
-	}
-	raw, err := s.Request(req)
+	raw, err := s.requestFactory.MakeNewAuthenticatedRequest(path.Join("orders", symbol, "hist"), s)
 	if err != nil {
 		return nil, err
 	}
@@ -84,11 +76,7 @@ func (s *OrderService) OrderTrades(symbol string, orderID int64) (*bitfinex.Orde
 
 	id := strconv.FormatInt(orderID, 10)
 
-	req, err := s.requestFactory.NewAuthenticatedRequest(path.Join("order", symbol+":"+id, "trades"))
-	if err != nil {
-		return nil, err
-	}
-	raw, err := s.Request(req)
+	raw, err := s.requestFactory.MakeNewAuthenticatedRequest(path.Join("order", symbol+":"+id, "trades"), s)
 	if err != nil {
 		return nil, err
 	}

@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sync"
 )
 
 var productionBaseURL = "https://api.bitfinex.com/v2/"
@@ -18,6 +19,8 @@ var productionBaseURL = "https://api.bitfinex.com/v2/"
 type requestFactory interface {
 	NewAuthenticatedRequestWithData(refURL string, data map[string]interface{}) (Request, error)
 	NewAuthenticatedRequest(refURL string) (Request, error)
+	MakeNewAuthenticatedRequest(refURL string, s Synchronous) ([]interface{}, error)
+	MakeNewAuthenticatedRequestWithData(refURL string, data map[string]interface{}, s Synchronous) ([]interface{}, error)
 }
 
 type Synchronous interface {
@@ -38,6 +41,9 @@ type Client struct {
 	Book      BookService
 	Wallet    WalletService
 
+	enableSerialization bool
+	mutex               *sync.Mutex
+
 	Synchronous
 }
 
@@ -50,6 +56,13 @@ func NewClient() *Client {
 		return c.Do(req)
 	}
 	return NewClientWithHttpDo(httpDo)
+}
+
+func NewSerializedClient(m *sync.Mutex) *Client {
+	c := NewClient()
+	c.enableSerialization = true
+	c.mutex = m
+	return c
 }
 
 func NewClientWithURLHttpDo(base string, httpDo func(c *http.Client, r *http.Request) (*http.Response, error)) *Client {
@@ -109,6 +122,26 @@ func (c *Client) sign(msg string) string {
 	sig := hmac.New(sha512.New384, []byte(c.apiSecret))
 	sig.Write([]byte(msg))
 	return hex.EncodeToString(sig.Sum(nil))
+}
+
+func (c *Client) MakeNewAuthenticatedRequest(refURL string, s Synchronous) ([]interface{}, error) {
+	return c.MakeNewAuthenticatedRequestWithData(refURL, nil, s)
+}
+
+func (c *Client) MakeNewAuthenticatedRequestWithData(refURL string, data map[string]interface{}, s Synchronous) ([]interface{}, error) {
+
+	if c.enableSerialization {
+		c.mutex.Lock()
+		defer c.mutex.Unlock()
+	}
+
+	r, err := c.NewAuthenticatedRequestWithData(refURL, data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Request(r)
 }
 
 func (c *Client) NewAuthenticatedRequest(refURL string) (Request, error) {
