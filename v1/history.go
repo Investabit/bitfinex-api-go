@@ -77,15 +77,8 @@ func (s *HistoryService) Movements(currency, method string, since, until time.Ti
 		payload["limit"] = limit
 	}
 
-	req, err := s.client.newAuthenticatedRequest("POST", "history/movements", payload)
-
-	if err != nil {
-		return nil, err
-	}
-
 	var v []Movement
-
-	_, err = s.client.do(req, &v)
+	_, err := s.client.authenticatedAndDoRequest("POST", "history/movements", payload, &v)
 
 	if err != nil {
 		return nil, err

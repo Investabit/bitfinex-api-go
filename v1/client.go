@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sync"
 
 	"github.com/bitfinexcom/bitfinex-api-go/utils"
 )
@@ -52,6 +53,9 @@ type Client struct {
 	History       *HistoryService
 	WebSocket     *WebSocketService
 	Wallet        *WalletService
+
+	serializeRequests bool
+	mutex             *sync.Mutex
 }
 
 // NewClient creates new Bitfinex.com API client.
@@ -82,6 +86,12 @@ func NewClient() *Client {
 	return c
 }
 
+func (c *Client) Serialize(m *sync.Mutex) *Client {
+	c.serializeRequests = true
+	c.mutex = m
+	return c
+}
+
 // NewRequest create new API request. Relative url can be provided in refURL.
 func (c *Client) newRequest(method string, refURL string, params url.Values) (*http.Request, error) {
 	rel, err := url.Parse(refURL)
@@ -100,6 +110,26 @@ func (c *Client) newRequest(method string, refURL string, params url.Values) (*h
 	}
 
 	return req, nil
+}
+
+func (c *Client) authenticatedAndDoRequest(
+	m string,
+	refURL string,
+	data map[string]interface{},
+	v interface{}) (*Response, error) {
+
+	if c.serializeRequests {
+		c.mutex.Lock()
+		defer c.mutex.Unlock()
+	}
+
+	req, err := c.newAuthenticatedRequest(m, refURL, data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return c.do(req, v)
 }
 
 // newAuthenticatedRequest creates new http request for authenticated routes.

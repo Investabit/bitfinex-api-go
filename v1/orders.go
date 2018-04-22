@@ -93,13 +93,8 @@ func (s *OrderService) Create(symbol string, amount float64, price float64, orde
 		"exchange": "bitfinex",
 	}
 
-	req, err := s.client.newAuthenticatedRequest("POST", "order/new", payload)
-	if err != nil {
-		return nil, err
-	}
-
 	order := new(Order)
-	_, err = s.client.do(req, order)
+	_, err := s.client.authenticatedAndDoRequest("POST", "order/new", payload, order)
 	if err != nil {
 		return nil, err
 	}
@@ -113,12 +108,7 @@ func (s *OrderService) Cancel(orderID int64) error {
 		"order_id": orderID,
 	}
 
-	req, err := s.client.newAuthenticatedRequest("POST", "order/cancel", payload)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.client.do(req, nil)
+	_, err := s.client.authenticatedAndDoRequest("POST", "order/cancel", payload, nil)
 	if err != nil {
 		return err
 	}
@@ -237,19 +227,9 @@ func (s *OrderService) Status(orderID int64) (Order, error) {
 		"order_id": orderID,
 	}
 
-	req, err := s.client.newAuthenticatedRequest("POST", "order/status", payload)
-
-	if err != nil {
-		return Order{}, err
-	}
-
 	order := new(Order)
-	_, err = s.client.do(req, order)
-	if err != nil {
-		return *order, err
-	}
-
-	return *order, nil
+	_, err := s.client.authenticatedAndDoRequest("POST", "order/status", payload, order)
+	return *order, err
 }
 
 // Active status retrieves from the API.
@@ -257,17 +237,7 @@ func (s *OrderService) ActiveStatus() ([]Order, error) {
 
 	payload := make(map[string]interface{})
 
-	req, err := s.client.newAuthenticatedRequest("POST", "orders", payload)
-
-	if err != nil {
-		return []Order{}, err
-	}
-
 	orders := []Order{}
-	_, err = s.client.do(req, &orders)
-	if err != nil {
-		return orders, err
-	}
-
-	return orders, nil
+	_, err := s.client.authenticatedAndDoRequest("POST", "orders", payload, &orders)
+	return orders, err
 }
