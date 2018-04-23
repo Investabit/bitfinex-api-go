@@ -13,11 +13,7 @@ type WalletService struct {
 
 // All returns all orders for the authenticated account.
 func (s *WalletService) Wallet() (*bitfinex.WalletSnapshot, error) {
-	req, err := s.requestFactory.NewAuthenticatedRequest(path.Join("wallets"))
-	if err != nil {
-		return nil, err
-	}
-	raw, err := s.Request(req)
+	raw, err := s.requestFactory.MakeNewAuthenticatedRequest(path.Join("wallets"), s)
 	if err != nil {
 		return nil, err
 	}
