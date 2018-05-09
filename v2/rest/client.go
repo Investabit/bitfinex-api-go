@@ -58,7 +58,11 @@ func NewClient() *Client {
 	return NewClientWithHttpDo(httpDo)
 }
 
-func NewSerializedClient(m *sync.Mutex, nonce utils.NonceGenerator) *Client {
+func NewSerializedClientCustomHTTPClient(
+	m *sync.Mutex,
+	nonce utils.NonceGenerator,
+	client *http.Client,
+) *Client {
 	httpDo := func(c *http.Client, req *http.Request) (*http.Response, error) {
 		return c.Do(req)
 	}
@@ -66,13 +70,17 @@ func NewSerializedClient(m *sync.Mutex, nonce utils.NonceGenerator) *Client {
 	sync := &HttpTransport{
 		BaseURL:    url,
 		httpDo:     httpDo,
-		HTTPClient: http.DefaultClient,
+		HTTPClient: client,
 	}
 	c := NewClientWithSynchronousNonce(sync, nonce)
 
 	c.enableSerialization = true
 	c.mutex = m
 	return c
+}
+
+func NewSerializedClient(m *sync.Mutex, nonce utils.NonceGenerator) *Client {
+	return NewSerializedClientCustomHTTPClient(m, nonce, http.DefaultClient)
 }
 
 func NewClientWithURLHttpDo(base string, httpDo func(c *http.Client, r *http.Request) (*http.Response, error)) *Client {

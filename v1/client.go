@@ -30,6 +30,8 @@ type Client struct {
 	WebSocketURL           string
 	WebSocketTLSSkipVerify bool
 
+	HTTPClient *http.Client
+
 	// Auth data
 	APIKey    string
 	APISecret string
@@ -60,9 +62,17 @@ type Client struct {
 
 // NewClient creates new Bitfinex.com API client.
 func NewClient() *Client {
+	return NewClientCustomHttpClient(http.DefaultClient)
+}
+
+func NewClientCustomHttpClient(httpClient *http.Client) *Client {
 	baseURL, _ := url.Parse(BaseURL)
 
-	c := &Client{BaseURL: baseURL, WebSocketURL: WebSocketURL}
+	c := &Client{
+		BaseURL:      baseURL,
+		WebSocketURL: WebSocketURL,
+		HTTPClient:   httpClient,
+	}
 	c.Pairs = &PairsService{client: c}
 	c.Stats = &StatsService{client: c}
 	c.Account = &AccountService{client: c}
@@ -179,13 +189,14 @@ func (c *Client) Auth(key string, secret string) *Client {
 	return c
 }
 
-var httpDo = func(req *http.Request) (*http.Response, error) {
-	return http.DefaultClient.Do(req)
+// Provide access to the HTTPClient (definable by the user)
+func (c *Client) httpDo(req *http.Request) (*http.Response, error) {
+	return c.HTTPClient.Do(req)
 }
 
 // Do executes API request created by NewRequest method or custom *http.Request.
 func (c *Client) do(req *http.Request, v interface{}) (*Response, error) {
-	resp, err := httpDo(req)
+	resp, err := c.httpDo(req)
 
 	if err != nil {
 		return nil, err
