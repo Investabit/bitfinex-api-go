@@ -6,7 +6,7 @@ type PlatformService struct {
 
 // Status indicates whether the platform is currently operative or not.
 func (p *PlatformService) Status() (bool, error) {
-	raw, err := p.Request(NewRequestWithMethod("platform/status", "GET"))
+	raw, _, err := p.Request(NewRequestWithMethod("platform/status", "GET"))
 
 	if err != nil {
 		return false, err

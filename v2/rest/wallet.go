@@ -2,6 +2,7 @@ package rest
 
 import (
 	"github.com/bitfinexcom/bitfinex-api-go/v2"
+	"net/http"
 	"path"
 )
 
@@ -12,16 +13,16 @@ type WalletService struct {
 }
 
 // All returns all orders for the authenticated account.
-func (s *WalletService) Wallet() (*bitfinex.WalletSnapshot, error) {
-	raw, err := s.requestFactory.MakeNewAuthenticatedRequest(path.Join("wallets"), s)
+func (s *WalletService) Wallet() (*bitfinex.WalletSnapshot, *http.Response, error) {
+	raw, resp, err := s.requestFactory.MakeNewAuthenticatedRequest(path.Join("wallets"), s)
 	if err != nil {
-		return nil, err
+		return nil, resp, err
 	}
 
 	os, err := bitfinex.NewWalletSnapshotFromRaw(raw)
 	if err != nil {
-		return nil, err
+		return nil, resp, err
 	}
 
-	return os, nil
+	return os, resp, nil
 }

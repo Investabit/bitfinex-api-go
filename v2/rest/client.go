@@ -19,12 +19,12 @@ var productionBaseURL = "https://api.bitfinex.com/v2/"
 type requestFactory interface {
 	NewAuthenticatedRequestWithData(refURL string, data map[string]interface{}) (Request, error)
 	NewAuthenticatedRequest(refURL string) (Request, error)
-	MakeNewAuthenticatedRequest(refURL string, s Synchronous) ([]interface{}, error)
-	MakeNewAuthenticatedRequestWithData(refURL string, data map[string]interface{}, s Synchronous) ([]interface{}, error)
+	MakeNewAuthenticatedRequest(refURL string, s Synchronous) ([]interface{}, *http.Response, error)
+	MakeNewAuthenticatedRequestWithData(refURL string, data map[string]interface{}, s Synchronous) ([]interface{}, *http.Response, error)
 }
 
 type Synchronous interface {
-	Request(request Request) ([]interface{}, error)
+	Request(request Request) ([]interface{}, *http.Response, error)
 }
 
 type Client struct {
@@ -142,11 +142,11 @@ func (c *Client) sign(msg string) string {
 	return hex.EncodeToString(sig.Sum(nil))
 }
 
-func (c *Client) MakeNewAuthenticatedRequest(refURL string, s Synchronous) ([]interface{}, error) {
+func (c *Client) MakeNewAuthenticatedRequest(refURL string, s Synchronous) ([]interface{}, *http.Response, error) {
 	return c.MakeNewAuthenticatedRequestWithData(refURL, nil, s)
 }
 
-func (c *Client) MakeNewAuthenticatedRequestWithData(refURL string, data map[string]interface{}, s Synchronous) ([]interface{}, error) {
+func (c *Client) MakeNewAuthenticatedRequestWithData(refURL string, data map[string]interface{}, s Synchronous) ([]interface{}, *http.Response, error) {
 
 	if c.enableSerialization {
 		c.mutex.Lock()
@@ -156,7 +156,7 @@ func (c *Client) MakeNewAuthenticatedRequestWithData(refURL string, data map[str
 	r, err := c.NewAuthenticatedRequestWithData(refURL, data)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	return s.Request(r)

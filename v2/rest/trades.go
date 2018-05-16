@@ -2,6 +2,7 @@ package rest
 
 import (
 	"github.com/bitfinexcom/bitfinex-api-go/v2"
+	"net/http"
 	"path"
 )
 
@@ -12,8 +13,8 @@ type TradeService struct {
 }
 
 // All returns all orders for the authenticated account.
-func (s *TradeService) All(symbol string) (*bitfinex.TradeSnapshot, error) {
-	raw, err := s.requestFactory.MakeNewAuthenticatedRequestWithData(
+func (s *TradeService) All(symbol string) (*bitfinex.TradeSnapshot, *http.Response, error) {
+	raw, resp, err := s.requestFactory.MakeNewAuthenticatedRequestWithData(
 		path.Join(
 			"trades",
 			symbol,
@@ -28,7 +29,7 @@ func (s *TradeService) All(symbol string) (*bitfinex.TradeSnapshot, error) {
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, resp, err
 	}
 
 	dat := make([][]float64, 0)
@@ -40,7 +41,7 @@ func (s *TradeService) All(symbol string) (*bitfinex.TradeSnapshot, error) {
 
 	os, err := bitfinex.NewTradeSnapshotFromRaw(symbol, dat)
 	if err != nil {
-		return nil, err
+		return nil, resp, err
 	}
-	return os, nil
+	return os, resp, nil
 }

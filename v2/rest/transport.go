@@ -14,12 +14,12 @@ type HttpTransport struct {
 	httpDo     func(c *http.Client, req *http.Request) (*http.Response, error)
 }
 
-func (h HttpTransport) Request(req Request) ([]interface{}, error) {
+func (h HttpTransport) Request(req Request) ([]interface{}, *http.Response, error) {
 	var raw []interface{}
 
 	rel, err := url.Parse(req.RefURL)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if req.Params != nil {
 		rel.RawQuery = req.Params.Encode()
@@ -30,7 +30,7 @@ func (h HttpTransport) Request(req Request) ([]interface{}, error) {
 
 	b, err := json.Marshal(req.Data)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	body := bytes.NewReader(b)
@@ -43,19 +43,19 @@ func (h HttpTransport) Request(req Request) ([]interface{}, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	resp, err := h.do(httpReq, &raw)
 	if err != nil {
 		if resp == nil || resp.Response == nil {
-			return nil, fmt.Errorf("connection could not be made: %v", err)
+			return nil, nil, fmt.Errorf("connection could not be made: %v", err)
 		} else {
-			return nil, fmt.Errorf("could not parse response: %s", resp.Response.Status)
+			return nil, resp.Response, fmt.Errorf("could not parse response: %s", resp.Response.Status)
 		}
 	}
 
-	return raw, nil
+	return raw, resp.Response, nil
 }
 
 // Do executes API request created by NewRequest method or custom *http.Request.

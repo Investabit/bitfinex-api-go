@@ -2,6 +2,7 @@ package rest
 
 import (
 	"github.com/bitfinexcom/bitfinex-api-go/v2"
+	"net/http"
 	"net/url"
 	"path"
 	"strconv"
@@ -11,14 +12,14 @@ type BookService struct {
 	Synchronous
 }
 
-func (b *BookService) All(symbol string, precision bitfinex.BookPrecision, priceLevels int) (*bitfinex.BookUpdateSnapshot, error) {
+func (b *BookService) All(symbol string, precision bitfinex.BookPrecision, priceLevels int) (*bitfinex.BookUpdateSnapshot, *http.Response, error) {
 	req := NewRequestWithMethod(path.Join("book", symbol, string(precision)), "GET")
 	req.Params = make(url.Values)
 	req.Params.Add("len", strconv.Itoa(priceLevels))
-	raw, err := b.Request(req)
+	raw, resp, err := b.Request(req)
 
 	if err != nil {
-		return nil, err
+		return nil, resp, err
 	}
 
 	data := make([][]float64, 0, len(raw))
@@ -36,8 +37,8 @@ func (b *BookService) All(symbol string, precision bitfinex.BookPrecision, price
 
 	book, err := bitfinex.NewBookUpdateSnapshotFromRaw(symbol, string(precision), data)
 	if err != nil {
-		return nil, err
+		return nil, resp, err
 	}
 
-	return book, nil
+	return book, resp, nil
 }
