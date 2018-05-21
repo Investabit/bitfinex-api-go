@@ -1,6 +1,9 @@
 package bitfinex
 
-import "time"
+import (
+	"net/http"
+	"time"
+)
 
 type HistoryService struct {
 	client *Client
@@ -60,7 +63,7 @@ type Movement struct {
 	Fee              float64 `json:"fee,string"`
 }
 
-func (s *HistoryService) Movements(currency, method string, since, until time.Time, limit int) ([]Movement, error) {
+func (s *HistoryService) Movements(currency, method string, since, until time.Time, limit int) ([]Movement, *http.Response, error) {
 
 	payload := map[string]interface{}{"currency": currency}
 
@@ -78,13 +81,13 @@ func (s *HistoryService) Movements(currency, method string, since, until time.Ti
 	}
 
 	var v []Movement
-	_, err := s.client.authenticatedAndDoRequest("POST", "history/movements", payload, &v)
+	resp, err := s.client.authenticatedAndDoRequest("POST", "history/movements", payload, &v)
 
 	if err != nil {
-		return nil, err
+		return nil, resp.Response, err
 	}
 
-	return v, nil
+	return v, resp.Response, nil
 }
 
 type PastTrade struct {

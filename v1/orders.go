@@ -2,6 +2,7 @@ package bitfinex
 
 import (
 	"math"
+	"net/http"
 	"strconv"
 )
 
@@ -75,7 +76,7 @@ func (s *OrderService) CancelAll() error {
 }
 
 // Create a new order.
-func (s *OrderService) Create(symbol string, amount float64, price float64, orderType string) (*Order, error) {
+func (s *OrderService) Create(symbol string, amount float64, price float64, orderType string) (*Order, *http.Response, error) {
 	var side string
 	if amount < 0 {
 		amount = math.Abs(amount)
@@ -94,26 +95,26 @@ func (s *OrderService) Create(symbol string, amount float64, price float64, orde
 	}
 
 	order := new(Order)
-	_, err := s.client.authenticatedAndDoRequest("POST", "order/new", payload, order)
+	resp, err := s.client.authenticatedAndDoRequest("POST", "order/new", payload, order)
 	if err != nil {
-		return nil, err
+		return nil, resp.Response, err
 	}
 
-	return order, nil
+	return order, resp.Response, nil
 }
 
 // Cancel the order with id `orderID`.
-func (s *OrderService) Cancel(orderID int64) error {
+func (s *OrderService) Cancel(orderID int64) (*http.Response, error) {
 	payload := map[string]interface{}{
 		"order_id": orderID,
 	}
 
-	_, err := s.client.authenticatedAndDoRequest("POST", "order/cancel", payload, nil)
+	resp, err := s.client.authenticatedAndDoRequest("POST", "order/cancel", payload, nil)
 	if err != nil {
-		return err
+		return resp.Response, err
 	}
 
-	return nil
+	return resp.Response, nil
 }
 
 // SubmitOrder is an order to be created on the bitfinex platform.
@@ -221,15 +222,15 @@ func (s *OrderService) Replace(orderID int64, useRemaining bool, newOrder Submit
 }
 
 // Status retrieves the given order from the API.
-func (s *OrderService) Status(orderID int64) (Order, error) {
+func (s *OrderService) Status(orderID int64) (Order, *http.Response, error) {
 
 	payload := map[string]interface{}{
 		"order_id": orderID,
 	}
 
 	order := new(Order)
-	_, err := s.client.authenticatedAndDoRequest("POST", "order/status", payload, order)
-	return *order, err
+	resp, err := s.client.authenticatedAndDoRequest("POST", "order/status", payload, order)
+	return *order, resp.Response, err
 }
 
 // Active status retrieves from the API.
