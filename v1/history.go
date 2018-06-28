@@ -84,7 +84,10 @@ func (s *HistoryService) Movements(currency, method string, since, until time.Ti
 	resp, err := s.client.authenticatedAndDoRequest("POST", "history/movements", payload, &v)
 
 	if err != nil {
-		return nil, resp.Response, err
+		if resp != nil {
+			return nil, resp.Response, err
+		}
+		return nil, nil, err
 	}
 
 	return v, resp.Response, nil

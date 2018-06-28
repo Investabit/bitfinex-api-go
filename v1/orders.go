@@ -97,7 +97,10 @@ func (s *OrderService) Create(symbol string, amount float64, price float64, orde
 	order := new(Order)
 	resp, err := s.client.authenticatedAndDoRequest("POST", "order/new", payload, order)
 	if err != nil {
-		return nil, resp.Response, err
+		if resp != nil {
+			return nil, resp.Response, err
+		}
+		return nil, nil, err
 	}
 
 	return order, resp.Response, nil
@@ -111,7 +114,10 @@ func (s *OrderService) Cancel(orderID int64) (*http.Response, error) {
 
 	resp, err := s.client.authenticatedAndDoRequest("POST", "order/cancel", payload, nil)
 	if err != nil {
-		return resp.Response, err
+		if resp != nil {
+			return resp.Response, err
+		}
+		return nil, err
 	}
 
 	return resp.Response, nil
@@ -230,6 +236,10 @@ func (s *OrderService) Status(orderID int64) (Order, *http.Response, error) {
 
 	order := new(Order)
 	resp, err := s.client.authenticatedAndDoRequest("POST", "order/status", payload, order)
+
+	if resp == nil {
+		return *order, nil, err
+	}
 	return *order, resp.Response, err
 }
 
