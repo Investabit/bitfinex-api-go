@@ -1,5 +1,9 @@
 package bitfinex
 
+import (
+	"net/http"
+)
+
 type BalancesService struct {
 	client *Client
 }
@@ -12,17 +16,15 @@ type WalletBalance struct {
 }
 
 // GET balances
-func (b *BalancesService) All() ([]WalletBalance, error) {
-	req, err := b.client.newAuthenticatedRequest("GET", "balances", nil)
-	if err != nil {
-		return nil, err
-	}
-
+func (b *BalancesService) All() ([]WalletBalance, *http.Response, error) {
 	balances := make([]WalletBalance, 3)
-	_, err = b.client.do(req, &balances)
+	resp, err := b.client.authenticatedAndDoRequest("GET", "balances", nil, &balances)
 	if err != nil {
-		return nil, err
+		if resp != nil {
+			return nil, resp.Response, err
+		}
+		return nil, nil, err
 	}
 
-	return balances, nil
+	return balances, resp.Response, nil
 }
