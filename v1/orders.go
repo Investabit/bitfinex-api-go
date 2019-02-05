@@ -61,18 +61,15 @@ func (s *OrderService) All() ([]Order, error) {
 }
 
 // CancelAll active orders for the authenticated account.
-func (s *OrderService) CancelAll() error {
-	req, err := s.client.newAuthenticatedRequest("POST", "order/cancel/all", nil)
+func (s *OrderService) CancelAll() (*http.Response, error) {
+	resp, err := s.client.authenticatedAndDoRequest("POST", "order/cancel/all", nil, nil)
 	if err != nil {
-		return err
+		if resp != nil {
+			return resp.Response, err
+		}
+		return nil, err
 	}
-
-	_, err = s.client.do(req, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return resp.Response, nil
 }
 
 // Create a new order.
