@@ -73,7 +73,7 @@ func (s *OrderService) CancelAll() (*http.Response, error) {
 }
 
 // Create a new order.
-func (s *OrderService) Create(symbol string, amount float64, price float64, orderType string) (*Order, *http.Response, error) {
+func (s *OrderService) Create(symbol string, amount float64, price float64, orderType string, params map[string]interface{}) (*Order, *http.Response, error) {
 	var side string
 	if amount < 0 {
 		amount = math.Abs(amount)
@@ -89,6 +89,10 @@ func (s *OrderService) Create(symbol string, amount float64, price float64, orde
 		"side":     side,
 		"type":     orderType,
 		"exchange": "bitfinex",
+	}
+
+	if postOnly, ok := params["is_postonly"]; ok {
+		payload["is_postonly"] = postOnly
 	}
 
 	order := new(Order)
