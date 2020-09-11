@@ -436,7 +436,7 @@ type OrderTradeSnapshot struct {
 }
 
 func NewOrderTradeFromRaw(raw []interface{}) (o *OrderTrade, err error) {
-	if len(raw) == 11 {
+	if len(raw) > 10 {
 		o = &OrderTrade{
 			TID:         int64(f64ValOrZero(raw[0])),
 			Pair:        sValOrEmpty(raw[1]),
